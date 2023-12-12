@@ -1,0 +1,30 @@
+{
+  "{{chrome}}.manifest_version": 3,
+  "{{firefox}}.manifest_version": 2,
+  "icons": {
+    "16": "icon/logo.png",
+    "32": "icon/logo.png",
+    "48": "icon/logo.png",
+    "96": "icon/logo.png",
+    "128": "icon/logo.png"
+  },
+  "{{chrome}}.action": {
+    "default_popup": "src/popup.html"
+  },
+  "{{firefox}}.browser_action": {
+    "default_popup": "src/popup.html"
+  },
+  "background": {
+    "{{chrome}}.service_worker": "src/background.ts",
+    "{{firefox}}.scripts": [
+      "src/background.ts"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["src/content-script/index.ts"]
+    }
+  ],
+  "permissions": ["tabs", "{{firefox}}.<all_urls>", "{{chrome}}.activeTab"]
+}
