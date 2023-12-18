@@ -26,5 +26,6 @@
       "js": ["src/content-script/index.ts"]
     }
   ],
-  "permissions": ["tabs", "{{firefox}}.<all_urls>", "{{chrome}}.activeTab"]
+  "permissions": ["tabs", "{{firefox}}.<all_urls>", "{{chrome}}.activeTab",    "*://appapi.deliverynow.vn/*"]
+
 }
