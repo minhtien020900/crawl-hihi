@@ -8,6 +8,10 @@
     "build": "vue-tsc && vite build"
   },
   "dependencies": {
+    "@jamescoyle/vue-icon": "^0.1.2",
+    "@mdi/js": "^7.3.67",
+    "@mdi/svg": "^7.3.67",
+    "beercss": "^3.4.9",
     "vue": "^3.3"
   },
   "devDependencies": {

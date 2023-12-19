@@ -2,42 +2,72 @@
 import browser from "webextension-polyfill";
 import { ref, onMounted } from "vue";
 import { BASE_URL, GET_MENU_INFO, GET_INFO_RESTAURANT, SF_DOMAIN, FETCH_DATA_CONFIG, GET_DETAIL } from "../config";
-
+import Step from './Step.vue'
 const restaurant_id = ref('')
 const restaurant_info = ref({})
 const delivery_id = ref('')
 const menu_infos = ref([])
 const url = ref('')
+const isLoading = ref(false)
+const startStep1 = ref(false)
 
-const getDOM = async () => {
+const steps = ref([{
+  active: false,
+  is_last: false,
+  text: 'get info'
+}, {
+  active: false,
+  is_last: false,
+  text: 'get dishes'
+},
+{
+  active: false,
+  is_last: true,
+  text: 'success'
+},])
+const onCraw = async () => {
+  isLoading.value = true
   const tabId = await browser.tabs.query({ active: true, currentWindow: true })
   const splitUrl = tabId[0].url.split(SF_DOMAIN)
 
+  steps.value[0].active = true
+
   url.value = splitUrl[splitUrl.length - 1]
+
+  // fetch delivery_id, restaurant_id
   const response = await fetch(`${BASE_URL}${GET_INFO_RESTAURANT}?url=${url.value}`, FETCH_DATA_CONFIG);
 
   const result = await response.json()
   if (result) {
-    restaurant_id.value = result.reply.restaurant_id
     delivery_id.value = result.reply.delivery_id
+    restaurant_id.value = result.reply.restaurant_id
+
+    // fetch restaurant info
+    const res_info = await getRestaurantInfo(delivery_id.value)
+
+    // fetch dishes
+    const menu_response = await getDishes(delivery_id.value)
+    if (menu_response) {
+      menu_infos.value = menu_response
+      isLoading.value = false
+    }
   }
 
   // browser.runtime.sendMessage({ action: 'startContentScript' })
 }
-const getDishes = async () => {
-  const response = await fetch(` ${BASE_URL}${GET_MENU_INFO}?id_type=2&request_id=${delivery_id.value}`, FETCH_DATA_CONFIG);
+const getDishes = async (delivery_id: string) => {
+  const response = await fetch(` ${BASE_URL}${GET_MENU_INFO}?id_type=2&request_id=${delivery_id}`, FETCH_DATA_CONFIG);
   const result = await response.json();
   if (result) {
-    menu_infos.value = result.reply.menu_infos
+    return result.reply.menu_infos
   }
-  console.log('response', menu_infos.value);
+  return null
 }
 
-const getRestaurantInfo = async () => {
-
-  const response = await fetch(`${BASE_URL}${GET_DETAIL}?id_type=2&request_id=${delivery_id.value}`, FETCH_DATA_CONFIG)
+const getRestaurantInfo = async (delivery_id: string) => {
+  const response = await fetch(`${BASE_URL}${GET_DETAIL}?id_type=2&request_id=${delivery_id}`, FETCH_DATA_CONFIG)
   const result = await response.json()
-  restaurant_info.value = result.reply.delivery_detail.name
+  return result
 }
 
 const onSave = async () => {
@@ -68,41 +98,46 @@ async function postData(url = "", data = {}) {
   return response.json(); // parses JSON response into native JavaScript objects
 }
 onMounted(() => {
-  console.log('mount');
 
 })
 </script>
 
 <template>
-  <div class="container p-5 has-background-grey ">
-    <div class=" card">
-      <div class="card-content">
-        <div class="content">
-          <div class="buttons">
-            <button class="button is-primary is-small ">Start craw</button>
-            <button class="button is-primary is-small is-loading">Start craw</button>
-            <button class="button is-small">Link</button>
+  <main class="container small-padding background scroll">
+    <div class="small-height center-align ">
+      <!-- <div class="center-align"> -->
+      <button class="border disabled small-round primary-border primary-text small small-elevate" @click="onCraw">
+        <progress v-if="isLoading" class="circle small">
+
+        </progress>
+        <i v-else>power_settings_new</i>
+      </button>
+      <!-- </div> -->
+      <div class="max"></div>
+      <nav class="scroll">
+        <template v-for="(step, index ) in steps" :key="index">
+          <div class="center-align">
+            <progress v-if="step.active" class="circle small"></progress>
+
+            <button v-else class="circle small fill">
+              {{ index + 1 }}
+
+            </button>
+
+            <div class="medium-margin">{{ step.text }}</div>
           </div>
+          <div v-if="!step.is_last" class="max divider"></div>
 
-          <button class="button is-primary is-small is-rounded" @click="getDOM">send message</button>
+        </template>
 
-          <p>url: {{ url }}</p>
-          <p>restaurant-id: {{ restaurant_id }}</p>
-          <p>delivery_id: {{ delivery_id }}</p>
-          <button class="button is-primary is-small is-rounded" @click="getRestaurantInfo">get restaurant info</button>
-          <p>info: {{ restaurant_info }}</p>
-
-          <button class="button is-primary is-small is-rounded" is-small is-rounded @click="getDishes">get dishes</button>
-          {{ menu_infos }}
-
-          <button class="button is-primary is-small is-rounded" @click="onSave">save data</button>
-        </div>
-      </div>
+      </nav>
     </div>
 
-  </div>
+  </main>
 </template>
 
-<style lang='scss'>
-body {}
+<style scoped lang='scss'>
+main {
+  width: 400px;
+}
 </style>
