@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiAccount } from '@mdi/js'
 </script>
 <template>
     <div class="wrapper option-1 option-1-1">
